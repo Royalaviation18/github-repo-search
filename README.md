@@ -59,7 +59,7 @@ Go to the project directory
 
 Set up PostgreSQL database
 
-- Create a DB named (example: githubdb) and update credentials in:
+- Create a DB named githubdb and update credentials in:
 ```bash
   src/main/resources/application.properties
 ```
