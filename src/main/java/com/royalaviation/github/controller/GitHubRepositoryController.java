@@ -26,12 +26,20 @@ public class GitHubRepositoryController {
      */
     @PostMapping("/search")
     public Map<String, Object> searchAndStore(@Valid @RequestBody SearchRequestDTO request) {
-        List<GitHubRepository> fetchedRepos = gitHubService.fetchRepositoriesFromGitHub(request);
-        repositoryStorageService.saveOrUpdateAll(fetchedRepos);
-
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Repositories fetched and saved successfully");
-        response.put("repositories", fetchedRepos);
+
+        try {
+            List<GitHubRepository> fetchedRepos = gitHubService.fetchRepositoriesFromGitHub(request);
+            repositoryStorageService.saveOrUpdateAll(fetchedRepos);
+
+            response.put("message", "Repositories fetched and saved successfully");
+            response.put("repositories", fetchedRepos);
+        } catch (Exception ex) {
+            response.put("error", "Failed to fetch or save repositories");
+            response.put("details", ex.getMessage());
+            throw new RuntimeException("GitHubRepositoryController: searchAndStore failed - " + ex.getMessage(), ex);
+        }
+
         return response;
     }
 
@@ -40,15 +48,18 @@ public class GitHubRepositoryController {
      * Returns stored repos from DB, filtered
      */
     @GetMapping("/repositories")
-    public Map<String, Object> getStoredRepositories(
-            @RequestParam(required = false) String language,
-            @RequestParam(required = false) Integer minStars,
-            @RequestParam(defaultValue = "stars") String sort
-    ) {
-        List<GitHubRepository> result = repositoryStorageService.getFiltered(language, minStars, sort);
-
+    public Map<String, Object> getStoredRepositories(@RequestParam(required = false) String language, @RequestParam(required = false) Integer minStars, @RequestParam(defaultValue = "stars") String sort) {
         Map<String, Object> response = new HashMap<>();
-        response.put("repositories", result);
+
+        try {
+            List<GitHubRepository> result = repositoryStorageService.getFiltered(language, minStars, sort);
+            response.put("repositories", result);
+        } catch (Exception ex) {
+            response.put("error", "Failed to fetch repositories from database");
+            response.put("details", ex.getMessage());
+            throw new RuntimeException("GitHubRepositoryController: getStoredRepositories failed - " + ex.getMessage(), ex);
+        }
+
         return response;
     }
 }

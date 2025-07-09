@@ -2,17 +2,21 @@ package com.royalaviation.github.service;
 
 import com.royalaviation.github.dto.GitHubApiResponse;
 import com.royalaviation.github.dto.SearchRequestDTO;
+
+
 import com.royalaviation.github.model.GitHubRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GitHubServiceImpl implements GitHubService {
 
     private final WebClient webClient;
@@ -23,33 +27,55 @@ public class GitHubServiceImpl implements GitHubService {
         String language = request.getLanguage();
         String sort = request.getSort();
 
-        String uri = "/search/repositories?q=" + query + "+language:" + language + "&sort=" + sort;
+        try {
+            log.info("Fetching GitHub repos with query='{}', language='{}', sort='{}'", query, language, sort);
 
-        GitHubApiResponse response = webClient.get()
-                .uri(uri)
-                .retrieve()
-                .bodyToMono(GitHubApiResponse.class)
-                .block(); // We use block() since this is not a reactive controller
+            GitHubApiResponse response = webClient
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search/repositories")
+                            .queryParam("q", query + " language:" + language)
+                            .queryParam("sort", sort)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(GitHubApiResponse.class)
+                    .block();
 
-        if (response == null || response.getItems() == null) {
-            throw new RuntimeException("Empty or invalid response from GitHub API");
+            if (response == null || response.getItems() == null) {
+                log.warn("GitHub API returned empty response for query='{}'", query);
+                return Collections.emptyList();
+            }
+
+            return response.getItems().stream()
+                    .map(item -> GitHubRepository.builder()
+                            .id(item.getId())
+                            .name(item.getName())
+                            .description(safeTruncate(item.getDescription(), 1000))
+                            .owner(item.getOwner() != null ? item.getOwner().getLogin() : null)
+                            .language(item.getLanguage())
+                            .stars(item.getStargazers_count())
+                            .forks(item.getForks_count())
+                            .lastUpdated(parseInstantSafely(item.getUpdated_at()))
+                            .build())
+                    .toList();
+
+        } catch (Exception e) {
+            log.error("Error fetching GitHub repositories: {}", e.getMessage(), e);
+            throw new RuntimeException("GitHub API call failed", e);
         }
-
-        return response.getItems().stream().map(item -> GitHubRepository.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(safeTruncate(item.getDescription(), 10000)) // Truncate to safe length
-                .owner(item.getOwner().getLogin())
-                .language(item.getLanguage())
-                .stars(item.getStargazers_count())
-                .forks(item.getForks_count())
-                .lastUpdated(Instant.parse(item.getUpdated_at()))
-                .build()).collect(Collectors.toList());
     }
 
-    // Utility method to safely truncate strings
-    private String safeTruncate(String input, int maxLength) {
-        if (input == null) return null;
-        return input.length() <= maxLength ? input : input.substring(0, maxLength);
+    private Instant parseInstantSafely(String timestamp) {
+        try {
+            return timestamp != null ? Instant.parse(timestamp) : null;
+        } catch (Exception e) {
+            log.warn("Failed to parse timestamp: {}", timestamp);
+            return null;
+        }
+    }
+
+    private String safeTruncate(String text, int maxLength) {
+        if (text == null) return null;
+        return text.length() > maxLength ? text.substring(0, maxLength) : text;
     }
 }
