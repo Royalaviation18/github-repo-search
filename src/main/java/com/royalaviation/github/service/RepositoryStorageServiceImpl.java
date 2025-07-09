@@ -81,16 +81,16 @@ public class RepositoryStorageServiceImpl implements RepositoryStorageService {
         return switch (sort.toLowerCase()) {
             case "forks" -> Comparator.comparing(
                     GitHubRepository::getForks,
-                    Comparator.nullsLast(Integer::compareTo)
-            ).reversed();
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
             case "updated" -> Comparator.comparing(
                     GitHubRepository::getLastUpdated,
-                    Comparator.nullsLast(Comparator.naturalOrder())
-            ).reversed();
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
             default -> Comparator.comparing(
                     GitHubRepository::getStars,
-                    Comparator.nullsLast(Integer::compareTo)
-            ).reversed();
+                    Comparator.nullsLast(Comparator.reverseOrder())
+            );
         };
     }
 }
