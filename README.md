@@ -22,9 +22,9 @@
 | :-------- | :------- | :------------------------- |
 | `query` | `string` | **Required**. name of the repository|
 | `language` | `string` | **Required**. Programming language used in the repository |
-| `sort` | `string` | **Optional**. Default value is stars |
+| `sort` | `string` | **Optional**. The default value is stars |
 
-#### 📤 Retrieve Stored Repositories with Filters : Fetches repositories from the database with optional filters and sorting.
+#### 📤 Retrieve Stored Repositories with Filters: Fetches repositories from the database with optional filters and sorting.
 
 ```http
   GET http://localhost:8080/api/github/repositories?language=Java&minStars=50&sort=forks
@@ -33,7 +33,7 @@
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
 | `language`      | `string` | **Optional**. Programming language used in the repository |
-| `minStars` | `Integer` | **Optional**. Return repositories with at least with this many stars |
+| `minStars` | `Integer` | **Optional**. Return repositories with at least this many stars |
 | `sort` | `string` | **Optional**. Sort by one of: stars(default),forks, updated |
 
 
@@ -44,6 +44,13 @@ More Examples:
   GET /api/repositories?sort=forks
 ```
 ## Run Locally
+
+✅ Prerequisites
+- Java 17+
+
+- Maven
+
+- PostgreSQL running locally
 
 Clone the project
 
@@ -71,21 +78,18 @@ Run the app
 ```
 - Or from IntelliJ, run GithubApplication.java.
 
+Access Swagger Docs:
 
+Navigate to:
+👉 http://localhost:8080/swagger-ui/index.html
 
-
-## Demo
-  Once the server is up, visit:
-  ```bash
-  http://localhost:8080/swagger-ui/index.html
-  ```
 
 
 ## 🧪  Running Test Cases
 
 This project uses JUnit 5 and Mockito for unit testing the service and controller layers.
 
-#### Prerequisities
+#### Prerequisites
 - Make sure you have
   
   i) JDK 17 or above
@@ -97,12 +101,12 @@ This project uses JUnit 5 and Mockito for unit testing the service and controlle
 ▶️ To run tests via IntelliJ IDEA
 
 - Navigate to src/test
-- Right click on RepositoryStorageServiceImplTest.java andd Run
+- Right click on RepositoryStorageServiceImplTest.java and Run
 
 ✅ What’s Covered
-- Layer	: Service
-- Tool	: JUnit + Mockito	
-- Purpose : Validates business logic and filters
+- Layer: Service
+- Tool: JUnit + Mockito	
+- Purpose: Validates business logic and filters
 
 
 📝 Sample Output
