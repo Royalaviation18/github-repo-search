@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +22,33 @@ public class RepositoryStorageServiceImpl implements RepositoryStorageService {
      */
     @Override
     public void saveOrUpdateAll(List<GitHubRepository> repos) {
-        log.info("Saving {} GitHub repositories to the database", repos.size());
-        repository.saveAll(repos);
+        log.info("Upserting {} GitHub repositories", repos.size());
+
+        // Fetch existing repos from DB by their IDs
+        List<Long> ids = repos.stream().map(GitHubRepository::getId).toList();
+        Map<Long, GitHubRepository> existingMap = repository.findAllById(ids).stream()
+                .collect(Collectors.toMap(GitHubRepository::getId, Function.identity()));
+
+        List<GitHubRepository> finalListToSave = new ArrayList<>();
+
+        for (GitHubRepository incomingRepo : repos) {
+            GitHubRepository updatedRepo = existingMap.getOrDefault(incomingRepo.getId(), new GitHubRepository());
+
+            // Either update existing or create new
+            updatedRepo.setId(incomingRepo.getId());
+            updatedRepo.setName(incomingRepo.getName());
+            updatedRepo.setDescription(incomingRepo.getDescription());
+            updatedRepo.setOwner(incomingRepo.getOwner());
+            updatedRepo.setLanguage(incomingRepo.getLanguage());
+            updatedRepo.setStars(incomingRepo.getStars());
+            updatedRepo.setForks(incomingRepo.getForks());
+            updatedRepo.setLastUpdated(incomingRepo.getLastUpdated());
+
+            finalListToSave.add(updatedRepo);
+        }
+
+        repository.saveAll(finalListToSave);
+        log.info("Saved {} repositories to the database", finalListToSave.size());
     }
 
     /**
