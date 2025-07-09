@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,12 +38,18 @@ public class GitHubServiceImpl implements GitHubService {
         return response.getItems().stream().map(item -> GitHubRepository.builder()
                 .id(item.getId())
                 .name(item.getName())
-                .description(item.getDescription())
+                .description(safeTruncate(item.getDescription(), 10000)) // Truncate to safe length
                 .owner(item.getOwner().getLogin())
                 .language(item.getLanguage())
                 .stars(item.getStargazers_count())
                 .forks(item.getForks_count())
                 .lastUpdated(Instant.parse(item.getUpdated_at()))
                 .build()).collect(Collectors.toList());
+    }
+
+    // Utility method to safely truncate strings
+    private String safeTruncate(String input, int maxLength) {
+        if (input == null) return null;
+        return input.length() <= maxLength ? input : input.substring(0, maxLength);
     }
 }

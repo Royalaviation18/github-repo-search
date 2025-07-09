@@ -19,13 +19,13 @@ import java.time.Instant;
 public class GitHubRepository {
 
     @Id
-    private Long id; // GitHub repository ID (unique)
+    private Long id; // Make sure this is from GitHub repo's actual numeric ID
 
     @Column(length = 512)
     private String name;
 
-    @Lob // Allows storing large text
-    @Column
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(length = 512)
