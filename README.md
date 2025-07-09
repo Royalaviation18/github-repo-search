@@ -108,6 +108,8 @@ This project uses JUnit 5 and Mockito for unit testing the service and controlle
 - Tool: JUnit + Mockito	
 - Purpose: Validates business logic and filters
 
+### Postman collection
+https://api.postman.com/collections/20662715-745cf7fd-93a6-4047-896b-236087c560e0?access_key=PMAT-01JZQJBP6BF9SC39KHV0BWSXYK
 
 📝 Sample Output
   ```bash
