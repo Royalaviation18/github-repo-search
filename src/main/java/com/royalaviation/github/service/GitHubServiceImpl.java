@@ -8,6 +8,8 @@ import com.royalaviation.github.model.GitHubRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
@@ -59,9 +61,12 @@ public class GitHubServiceImpl implements GitHubService {
                             .build())
                     .toList();
 
-        } catch (Exception e) {
-            log.error("Error fetching GitHub repositories: {}", e.getMessage(), e);
-            throw new RuntimeException("GitHub API call failed", e);
+        } catch (WebClientResponseException ex) {
+            log.warn("GitHub API returned HTTP {}", ex.getStatusCode().value());
+            throw ex;
+        } catch (WebClientRequestException ex) {
+            log.warn("Unable to reach GitHub API");
+            throw ex;
         }
     }
 
